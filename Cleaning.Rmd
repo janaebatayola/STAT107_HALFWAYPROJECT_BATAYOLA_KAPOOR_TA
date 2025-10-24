@@ -1,0 +1,40 @@
+---
+title: "Cleaning"
+output: html_document
+date: "2025-10-24"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+
+```
+
+```{r}
+teams <- teams %>%
+  select(TEAM_ID, ABBREVIATION, NICKNAME, CITY)
+
+games_clean <- games %>% 
+  left_join(teams %>%
+      rename(
+        HOME_TEAM_ID        = TEAM_ID,
+        HOME_ABBREVIATION   = ABBREVIATION,
+        HOME_NICKNAME       = NICKNAME,
+        HOME_CITY           = CITY),
+    by = "HOME_TEAM_ID") %>% 
+  left_join(teams %>% 
+      rename(
+        VISITOR_TEAM_ID        = TEAM_ID,
+        VISITOR_ABBREVIATION   = ABBREVIATION,
+        VISITOR_NICKNAME       = NICKNAME,
+        VISITOR_CITY           = CITY),
+    by = "VISITOR_TEAM_ID") %>%
+  mutate(ABBREVIATION_TEAM_WIN = case_when(
+      HOME_TEAM_WINS == 1L ~ HOME_ABBREVIATION,
+      HOME_TEAM_WINS == 0L ~ VISITOR_ABBREVIATION,
+      TRUE                  ~ NA_character_   )) %>%
+  select(-GAME_STATUS_TEXT) %>%
+  mutate(margin_winner = if_else(HOME_TEAM_WINS == 1L,
+                                 PTS_home - PTS_away,
+                                 PTS_away - PTS_home))
+```
