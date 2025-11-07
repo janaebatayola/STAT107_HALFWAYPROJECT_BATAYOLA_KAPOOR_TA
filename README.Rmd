@@ -1,0 +1,181 @@
+---
+title: "NBA Game Win Prediction Project - README"
+output: html_document
+---
+
+# NBA Game Win Prediction Using Multivariable Regression Analysis
+
+## Project Overview
+
+This project investigates which game statistics are the most significant predictors of winning an NBA game. Using team-level game data, we apply multivariable logistic regression to model the binary outcome of game wins and linear regression to predict point differentials. The analysis focuses on differential statistics between home and away teams across key performance metrics.
+
+## File Structure and Roles
+
+### Data Files
+
+**Primary Data Files:**
+- **`games.csv`**: Main dataset containing game-level statistics for NBA games. Includes performance metrics for both home and away teams (points, field goal percentage, free throw percentage, three-point percentage, assists, rebounds) along with game identifiers and outcome variable (`HOME_TEAM_WINS`). Contains about 26,600 game observations from the 2022-2023 NBA season.
+
+- **`teams.csv`**: Team identification dataset containing team IDs, abbreviations, nicknames, cities, and other team metadata. This file is used to join team information with game data during the cleaning process.
+
+### Code Files
+
+- **`00_requirements.R`**: R script that loads all required packages for the project. This file ensures consistent package loading across all R Markdown files. Currently loads:
+  - `dplyr`: For data manipulation and transformation
+  - `ggplot2`: For creating visualizations
+  - `tidyr`: For data reshaping operations
+
+### R Markdown Files
+
+- **`Cleaning.Rmd`**: Data cleaning and preparation script. This file:
+  - Reads the raw `games.csv` and `teams.csv` files
+  - Joins team information (abbreviations, nicknames, cities) with game data
+  - Creates differential variables (FG_diff, FT_diff, FG3_diff, AST_diff, REB_diff, PTS_diff) by calculating differences between home and away team statistics
+  - Removes unnecessary columns
+  - Handles missing values
+  - Produces the cleaned dataset `games_clean` that is used in subsequent analysis
+
+- **`FinalReport.Rmd`**: Main analysis and report document. This file contains:
+  - **Title and Abstract**: Project title and summary (≤200 words)
+  - **Introduction**: Research question, purpose, and beneficiaries
+  - **Data**: Description of datasets, variables, and cleaning steps
+  - **Visualization**: Code for creating histograms, density plots, scatter plots, box plots, and numerical summaries with interpretations
+  - **Analysis**: Implementation of logistic regression model (for win prediction) and linear regression model (for point differential prediction), along with model summaries and predictions
+
+### Project Configuration
+
+- **`STAT107_HALFWAYPROJECT_BATAYOLA_KAPOOR_TA-1.Rproj`**: RStudio project file that helps manage the project workspace and settings.
+
+## How to Reproduce the Results
+
+Follow these steps in order to reproduce the complete analysis:
+
+### Prerequisites
+
+1. **Install R and RStudio**: Ensure you have R and RStudio installed on your system.
+
+2. **Install Required R Packages**: Open R or RStudio and install the required packages if they are not already installed:
+   ```r
+   install.packages(c("dplyr", "ggplot2", "tidyr", "knitr", "rmarkdown"))
+   ```
+
+3. **Open the Project**: Open the RStudio project file (`STAT107_HALFWAYPROJECT_BATAYOLA_KAPOOR_TA-1.Rproj`) in RStudio, or set your working directory to the project folder.
+
+### Step-by-Step Reproduction Instructions
+
+#### Step 1: Verify Data Files
+
+Ensure that the following data files are present in the project directory:
+- `games.csv`
+- `teams.csv`
+
+These files should be in the same directory as the R Markdown files.
+
+#### Step 2: Run Data Cleaning
+
+1. Open `Cleaning.Rmd` in RStudio.
+
+2. Click "Knit" or run the entire document.
+
+3. This will:
+   - Load required packages through `00_requirements.R`
+   - Read the raw data files
+   - Perform all data cleaning operations
+   - Create the `games_clean` dataset
+
+#### Step 3: Generate the Final Report
+
+1. Open `FinalReport.Rmd` in RStudio.
+
+2. **Note**: The `FinalReport.Rmd` file assumes that `games_clean` is available in the environment. If you are knitting the document fresh, you may need to:
+   - Either run `Cleaning.Rmd` first and keep the environment active, OR
+   - Add a data loading chunk at the beginning of `FinalReport.Rmd` that runs the cleaning code
+
+3. Click "Knit" to generate the HTML report.
+
+4. The knitted document will:
+   - Load all required packages
+   - Generate all visualizations (histograms, density plots, box plots, scatter plots)
+   - Fit the logistic regression model for win prediction
+   - Fit the linear regression model for point differential prediction
+   - Generate predictions for all games
+   - Display model summaries and interpretations
+
+### Alternative: Running Code Chunks Sequentially
+
+If you prefer to run code interactively rather than knitting:
+
+1. **Load packages**:
+   ```r
+   source("00_requirements.R")
+   ```
+
+2. **Run cleaning code** (from `Cleaning.Rmd`):
+   ```r
+   teams <- read.csv("teams.csv")
+   teams <- teams %>%
+     select(TEAM_ID, ABBREVIATION, NICKNAME, CITY)
+   
+   games <- read.csv("games.csv")
+   games_clean <- games %>% 
+     left_join(teams %>%
+         rename(
+           HOME_TEAM_ID        = TEAM_ID,
+           HOME_ABBREVIATION   = ABBREVIATION,
+           HOME_NICKNAME       = NICKNAME,
+           HOME_CITY           = CITY),
+       by = "HOME_TEAM_ID") %>% 
+     left_join(teams %>% 
+         rename(
+           VISITOR_TEAM_ID        = TEAM_ID,
+           VISITOR_ABBREVIATION   = ABBREVIATION,
+           VISITOR_NICKNAME       = NICKNAME,
+           VISITOR_CITY           = CITY),
+       by = "VISITOR_TEAM_ID") %>%
+     mutate(ABBREVIATION_TEAM_WIN = case_when(
+         HOME_TEAM_WINS == 1L ~ HOME_ABBREVIATION,
+         HOME_TEAM_WINS == 0L ~ VISITOR_ABBREVIATION,
+         TRUE                  ~ NA_character_   )) %>%
+     select(-GAME_STATUS_TEXT) %>%
+     mutate(FG_diff  = FG_PCT_home - FG_PCT_away,
+       FT_diff  = FT_PCT_home - FT_PCT_away,
+       FG3_diff = FG3_PCT_home - FG3_PCT_away,
+       AST_diff = AST_home - AST_away,
+       REB_diff = REB_home - REB_away,
+       PTS_diff = PTS_home - PTS_away)
+   
+   games_clean <- games_clean %>%
+     drop_na(HOME_TEAM_WINS, PTS_diff, FG_diff, FT_diff, FG3_diff, AST_diff, REB_diff)
+   ```
+
+3. **Run analysis code** (from `FinalReport.Rmd`):
+   - Execute code chunks sequentially to generate visualizations and models
+   - View model summaries and predictions
+
+### Expected Outputs
+
+After completing the reproduction steps, you should have:
+
+1. **Cleaned Dataset**: The `games_clean` object containing:
+   - Original game data with team information joined
+   - Differential variables (FG_diff, FT_diff, FG3_diff, AST_diff, REB_diff, PTS_diff)
+   - Approximately 26,651 game observations (may slightly vary after removing missing values)
+
+2. **Visualizations**: Multiple plots including:
+   - Histograms of differential variables
+   - Density plots comparing wins vs losses
+   - Box plots showing distribution differences
+   - Scatter plots with regression lines
+
+3. **Models**:
+   - `win_model`: Logistic regression model for predicting home team wins
+   - `differential_model`: Linear regression model for predicting point differentials
+
+4. **Predictions**: The `games_clean` dataset with added columns:
+   - `pred_homewin_prob`: Predicted probability of home team win
+   - `pred_winner`: Predicted winning team abbreviation
+   - `pred_margin`: Predicted point differential
+   - `pred_side`: Predicted winner side (HOME or AWAY)
+
+5. **HTML Report**: A knitted HTML document (`FinalReport.html`) containing all sections, visualizations, model summaries, and interpretations.
+

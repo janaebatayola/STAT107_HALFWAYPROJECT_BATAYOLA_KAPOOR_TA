@@ -6,14 +6,15 @@ date: "2025-10-24"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(dplyr)
-
+source("00_requirements.R")
 ```
 
 ```{r}
+teams <- read.csv("teams.csv")
 teams <- teams %>%
   select(TEAM_ID, ABBREVIATION, NICKNAME, CITY)
 
+games <- read.csv("games.csv")
 games_clean <- games %>% 
   left_join(teams %>%
       rename(
@@ -40,4 +41,6 @@ games_clean <- games %>%
     AST_diff = AST_home - AST_away,
     REB_diff = REB_home - REB_away,
     PTS_diff = PTS_home - PTS_away)
+
+drop_na(HOME_TEAM_WINS, PTS_diff, FG_diff, FT_diff, FG3_diff, AST_diff, REB_diff)
 ```
