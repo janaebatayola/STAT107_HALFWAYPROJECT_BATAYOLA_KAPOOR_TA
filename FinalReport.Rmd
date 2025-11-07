@@ -1,0 +1,29 @@
+---
+title: "FinalReport"
+output: html_document
+date: "2025-11-06"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+
+```
+
+```{r}
+win_model <- glm(
+  HOME_TEAM_WINS ~ FG_diff + FT_diff + FG3_diff + AST_diff + REB_diff,
+  data = games_clean,
+  family = binomial)
+
+differential_model <- glm(
+  PTS_diff ~ FG_diff + FT_diff + FG3_diff + AST_diff + REB_diff,
+  data = games_clean)
+
+games_clean <- games_clean %>%
+  mutate(pred_homewin_prob = predict(win_model, newdata = ., type = "response"),
+  pred_winner = if_else(pred_homewin_prob >= 0.5, HOME_ABBREVIATION,  
+  VISITOR_ABBREVIATION),
+  pred_margin = as.numeric(predict(differential_model, newdata = .)),
+  pred_side = if_else(pred_winner == HOME_ABBREVIATION, "HOME", "AWAY"))
+```
