@@ -40,7 +40,7 @@ games_clean <- games %>%
     FG3_diff = FG3_PCT_home - FG3_PCT_away,
     AST_diff = AST_home - AST_away,
     REB_diff = REB_home - REB_away,
-    PTS_diff = PTS_home - PTS_away)
-
-drop_na(HOME_TEAM_WINS, PTS_diff, FG_diff, FT_diff, FG3_diff, AST_diff, REB_diff)
+    PTS_diff = PTS_home - PTS_away
+    ) %>%
+tidyr::drop_na(HOME_TEAM_WINS, PTS_diff, FG_diff, FT_diff, FG3_diff, AST_diff, REB_diff)
 ```
