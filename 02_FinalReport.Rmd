@@ -5,8 +5,13 @@ date: "2025-11-06"
 ---
 
 ```{r setup, include=FALSE}
+# Ensures all code chunks show their code when rendered unless they are overridden
 knitr::opts_chunk$set(echo = TRUE)
+
+# Loads all required packages and libraries
 source("00_requirements.R")
+
+#Runs the cleaning script to prepare the dataset for analysis
 source("Cleaning.Rmd")
 
 ```
@@ -108,19 +113,34 @@ summary_stats <- games_clean %>%
     min = ~min(., na.rm = TRUE),
     max = ~max(., na.rm = TRUE)
   ))
+# Creates summary statistics for differential performance metrics to check averages, spread, and range.
 
 print(summary_stats)
+# Displays the summary table for quick data inspection.
 ```
 
 ```{r histograms}
 # Histograms of differential variables
 par(mfrow = c(2, 3))
+# Sets plotting layout for 6 histograms in a 2x3 grid.
+
 hist(games_clean$FG_diff, main = "Field Goal % Differential", xlab = "FG_diff", breaks = 30)
+# Plots home vs away shooting accuracy difference distribution.
+
 hist(games_clean$FT_diff, main = "Free Throw % Differential", xlab = "FT_diff", breaks = 30)
+# Shows variation in free throw differential.
+
 hist(games_clean$FG3_diff, main = "3-Point % Differential", xlab = "FG3_diff", breaks = 30)
+# Displays the spread of 3-point shooting differentials.
+
 hist(games_clean$AST_diff, main = "Assists Differential", xlab = "AST_diff", breaks = 30)
+# Visualizes the difference in team assists per game.
+
 hist(games_clean$REB_diff, main = "Rebounds Differential", xlab = "REB_diff", breaks = 30)
+# Shows how rebounds differ between home and away teams.
+
 hist(games_clean$PTS_diff, main = "Points Differential", xlab = "PTS_diff", breaks = 30)
+# Final histogram displaying how scoring margins distribute.
 ```
 
 ```{r density-plots}
@@ -133,6 +153,8 @@ games_clean %>%
        x = "Point Differential (Home - Away)",
        y = "Density") +
   theme_minimal()
+# Creates density plots of point differential for home vs. away wins.
+# A strong separation indicates point differential strongly predicts wins.
 ```
 
 ```{r box-plots}
@@ -149,6 +171,9 @@ games_clean %>%
        y = "Differential Value") +
   theme_minimal() +
   theme(legend.position = "none")
+# Produces boxplots comparing statistical differentials between home and away wins.
+# Faceting allows side-by-side comparison of multiple stats.
+# Helps visualize which stats increase with wins.
 ```
 
 ```{r scatter-plots}
@@ -164,6 +189,9 @@ games_clean %>%
        x = "Predictor Value",
        y = "Point Differential (Home - Away)") +
   theme_minimal()
+# Creates scatterplots of each predictor vs. point differential.
+# Adds regression lines to visualize liner trends
+# Used to validate suitability for linear regression.
 ```
 
 ## Visualization Interpretation
@@ -215,8 +243,11 @@ win_model <- glm(
   HOME_TEAM_WINS ~ FG_diff + FT_diff + FG3_diff + AST_diff + REB_diff,
   data = games_clean,
   family = binomial)
+# Fits a logistic regression model prediciting home win probability.
+# Uses differential statistics as prefictors for binary outcome (win/loss.)
 
 # Summary of the win prediction model
+# Displays model coefficients, p-values and fit metrics.
 summary(win_model)
 ```
 
@@ -225,8 +256,11 @@ summary(win_model)
 differential_model <- glm(
   PTS_diff ~ FG_diff + FT_diff + FG3_diff + AST_diff + REB_diff,
   data = games_clean)
+# Fits a linear regression model predicting point differential (margin of victory.)
+# Measures how each stat difference contributes to scoring margin.
 
 # Summary of the point differential model
+# Displays coefficients, R-squared, and significance levels.
 summary(differential_model)
 ```
 
@@ -235,11 +269,18 @@ summary(differential_model)
 games_clean <- games_clean %>%
   mutate(
     pred_homewin_prob = predict(win_model, newdata = ., type = "response"),
-    pred_winner = if_else(pred_homewin_prob >= 0.5, HOME_ABBREVIATION,  
+# Calculates predicted probability of a home team win (0-1 scale).
+
+    pred_winner = if_else(pred_homewin_prob >= 0.5, HOME_ABBREVIATION, 
                           VISITOR_ABBREVIATION),
+ # Assigns predicted winner based on a 0.5 probability cutoff.
+
     pred_margin = as.numeric(predict(differential_model, newdata = .)),
+# Predicts expected point differential (predicted score margin).
     pred_side = if_else(pred_winner == HOME_ABBREVIATION, "HOME", "AWAY")
+# Labels which side (home or away) is predicted to win.
   )
+# Adds all prediction columns to the dataset: win probability, predicted winner, and point margin.
 ```
 
 The models have been successfully implemented. The logistic regression model (`win_model`) predicts the probability of a home team win, while the linear regression model (`differential_model`) predicts the expected point differential. Predictions have been generated and added to the dataset, including predicted win probabilities, predicted winners, predicted margins, and predicted side (home or away).
