@@ -10,10 +10,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Loads all required packages and libraries
 source("00_requirements.R")
-
-#Runs the cleaning script to prepare the dataset for analysis
-source("Cleaning.Rmd")
-
 ```
 
 # Title and Abstract
@@ -97,9 +93,7 @@ The cleaned dataset (`games_clean`) contains all original game observations with
 Preliminary visualizations provide insights into the distribution of key variables and their relationships with game outcomes. The following visualizations help us understand the data structure and inform our modeling approach.
 
 ```{r data-loading}
-# Load the data (assuming games_clean is created from Cleaning.Rmd)
-# If needed, uncomment and run the cleaning code:
-# source("Cleaning.Rmd")
+# Make sure to load the data first from 01_Cleaning.Rmd
 ```
 
 ```{r numerical-summaries}
